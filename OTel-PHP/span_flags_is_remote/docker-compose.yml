@@ -1,0 +1,36 @@
+version: '2.1'
+
+services:
+    mock-collector:
+        build: .
+        environment:
+            - OTEL_PHP_DISABLED_INSTRUMENTATIONS=all
+
+    app-before-fix:
+        depends_on:
+            - mock-collector
+        build: .
+        environment:
+            - OTEL_PHP_AUTOLOAD_ENABLED=true
+            - OTEL_TRACES_EXPORTER=otlp
+            - OTEL_EXPORTER_OTLP_ENDPOINT=http://mock-collector:8080
+        healthcheck:
+            test: [ "CMD-SHELL", "curl http://app-before-fix:8080/before_fix_without_traceparent && curl -H 'traceparent: 00-12345678901234567890123456789012-1234567890123456-01' http://app-before-fix:8080/before_fix_with_traceparent" ]
+            interval: 1s
+            timeout: 10s
+            retries: 10
+
+    app-after-fix:
+        depends_on:
+            - mock-collector
+        build: .
+        environment:
+            - OTEL_PHP_AUTOLOAD_ENABLED=true
+            - OTEL_TRACES_EXPORTER=otlp
+            - OTEL_EXPORTER_OTLP_ENDPOINT=http://mock-collector:8080
+            - APPLY_IS_REMOTE_FLAG_FIX=true
+        healthcheck:
+            test: [ "CMD-SHELL", "curl http://app-after-fix:8080/after_fix_without_traceparent && curl -H 'traceparent: 00-12345678901234567890123456789012-1234567890123456-01' http://app-after-fix:8080/after_fix_with_traceparent" ]
+            interval: 1s
+            timeout: 10s
+            retries: 10
