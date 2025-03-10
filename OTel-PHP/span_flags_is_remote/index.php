@@ -97,7 +97,7 @@ function getSingleHeaderValue(string $headerName, array $headers): string
 
 function jsonEncode(mixed $value): string
 {
-    return json_encode($value, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
+    return json_encode($value, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_SLASHES);
 }
 
 function convertIdToString(string $binaryId): ?string
